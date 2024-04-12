@@ -241,7 +241,7 @@ h6 {
 @media (max-width: 500px){
   #hero {
     width: 100%;
-    height: calc(100vh - 80px);
+    height: 100%;
     background: url("../img/blard2.jpeg") ;
     background-size: cover;
     background-repeat: no-repeat;
