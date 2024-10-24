@@ -1,85 +1,46 @@
-/**
-* PHP Email Form Validation - v3.6
-* URL: https://bootstrapmade.com/php-email-form/
-* Author: BootstrapMade.com
-*/
-(function () {
-  "use strict";
+document.getElementById('contact-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
 
-  let forms = document.querySelectorAll('.php-email-form');
+  const form = this;
+  const loadingMessage = form.querySelector('.loading');
+  const errorMessage = form.querySelector('.error-message');
+  const successMessage = form.querySelector('.sent-message');
 
-  forms.forEach( function(e) {
-    e.addEventListener('submit', function(event) {
-      event.preventDefault();
+  // Show loading message
+  loadingMessage.style.display = 'block';
+  errorMessage.style.display = 'none';
+  successMessage.style.display = 'none';
 
-      let thisForm = this;
+  // Collect form data
+  const formData = new FormData(form);
 
-      let action = thisForm.getAttribute('action');
-      let recaptcha = thisForm.getAttribute('data-recaptcha-site-key');
-      
-      if( ! action ) {
-        displayError(thisForm, 'The form action property is not set!');
-        return;
-      }
-      thisForm.querySelector('.loading').classList.add('d-block');
-      thisForm.querySelector('.error-message').classList.remove('d-block');
-      thisForm.querySelector('.sent-message').classList.remove('d-block');
-
-      let formData = new FormData( thisForm );
-
-      if ( recaptcha ) {
-        if(typeof grecaptcha !== "undefined" ) {
-          grecaptcha.ready(function() {
-            try {
-              grecaptcha.execute(recaptcha, {action: 'php_email_form_submit'})
-              .then(token => {
-                formData.set('recaptcha-response', token);
-                php_email_form_submit(thisForm, action, formData);
-              })
-            } catch(error) {
-              displayError(thisForm, error);
-            }
-          });
-        } else {
-          displayError(thisForm, 'The reCaptcha javascript API url is not loaded!')
-        }
-      } else {
-        php_email_form_submit(thisForm, action, formData);
-      }
-    });
-  });
-
-  function php_email_form_submit(thisForm, action, formData) {
-    fetch(action, {
+  try {
+    // Send form data to Formspree
+    const response = await fetch(form.action, {
       method: 'POST',
       body: formData,
-      headers: {'X-Requested-With': 'XMLHttpRequest'}
-    })
-    .then(response => {
-      if( response.ok ) {
-        return response.text();
-      } else {
-        throw new Error(`${response.status} ${response.statusText} ${response.url}`); 
-      }
-    })
-    .then(data => {
-      thisForm.querySelector('.loading').classList.remove('d-block');
-      if (data.trim() == 'OK') {
-        thisForm.querySelector('.sent-message').classList.add('d-block');
-        thisForm.reset(); 
-      } else {
-        throw new Error(data ? data : 'Form submission failed and no error message returned from: ' + action); 
-      }
-    })
-    .catch((error) => {
-      displayError(thisForm, error);
+      headers: {
+        'Accept': 'application/json',
+      },
     });
-  }
 
-  function displayError(thisForm, error) {
-    thisForm.querySelector('.loading').classList.remove('d-block');
-    thisForm.querySelector('.error-message').innerHTML = error;
-    thisForm.querySelector('.error-message').classList.add('d-block');
-  }
+    // Hide loading message
+    loadingMessage.style.display = 'none';
 
-})();
+    if (response.ok) {
+      // Show success message and reset form
+      successMessage.style.display = 'block';
+      form.reset();
+    } else {
+      // Show error message if submission fails
+      const data = await response.json();
+      errorMessage.textContent = data.error || 'Form submission failed!';
+      errorMessage.style.display = 'block';
+    }
+  } catch (error) {
+    // Show error message in case of network error
+    loadingMessage.style.display = 'none';
+    errorMessage.textContent = 'There was an error. Please try again.';
+    errorMessage.style.display = 'block';
+  }
+});
