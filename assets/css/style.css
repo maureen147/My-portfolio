@@ -358,8 +358,9 @@ section {
 .abt-img img{
   outline: 2px solid #173b6c;
   border-radius: 10px;
-  /* filter: grayscale(50%); */
+  filter: grayscale(50%);
   height: 100%;
+  
 }
 .about .content h3 {
   font-weight: 700;
